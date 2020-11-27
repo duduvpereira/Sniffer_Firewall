@@ -54,6 +54,7 @@ extern int errno;
   	int          protocolo;
     int          preenchido;
     int          banido;
+    int          tamanho;
   };
 
 struct fluxo f[15];
@@ -72,36 +73,40 @@ void preenche()
     f[i].cont = 0;
     f[i].preenchido = 0;
     f[i].banido = 0;
+    f[i].tamanho = 0;
   }
 
 }
 
-int verificafluxo(int ip, int ip2, int t, int p, int portadest)
+int verificafluxo(int ip, int ip2, int t, int p, int portadest, int tamanho)
 {
   int i=0;
   int flag=0;
 
-  //printf("%x ", ip);
-  //printf("%x ", ip2);
-  //printf("%d ", t);
-  //printf("%d ", p);
-  //printf("%d \n", portadest);
 
-  //printf("%x | %x | %d | %d | %d\n", f[0].ip_org, f[0].ip_dest, f[0].protocolo, f[0].porta_o, f[0].porta_d);
-  //printf("entrei verifica\n" );
 
   while(f[i].preenchido != 0){
-    //printf("entrei verifica while %d\n",i );
-
-    //if((ip == f[i].ip_org) && (ip2 == f[i].ip_dest) && (t == f[i].protocolo) && (p == f[i].porta_o) && (portadest == f[i].porta_d))
-    //{
-    if((ip == f[i].ip_org) && (ip2 == f[i].ip_dest) && (t == f[i].protocolo) && (portadest == f[i].porta_d))
+    if(t == 1)
+    {
+      if((ip == f[i].ip_org) && (ip2 == f[i].ip_dest) && (t == f[i].protocolo))
       {
       //printf("entrei verifica if1 %d\n",i );
         f[i].cont = f[i].cont +1;
+        f[i].tamanho = f[i].tamanho + tamanho;
         flag = 1;
         //printf("%d", flag);
     }
+    }
+    else{
+      if((ip == f[i].ip_org) && (ip2 == f[i].ip_dest) && (t == f[i].protocolo) && (portadest == f[i].porta_d) && (p == f[i].porta_o))
+      {
+    //printf("entrei verifica if1 %d\n",i );
+      f[i].cont = f[i].cont +1;
+      f[i].tamanho = f[i].tamanho + tamanho;
+      flag = 1;
+      //printf("%d", flag);
+    }
+  }
     i++;
   }
   //printf("entrei verifica fora while %d\n",i );
@@ -117,6 +122,7 @@ int verificafluxo(int ip, int ip2, int t, int p, int portadest)
       //printf("%d\n", f[i].porta_d);
       f[i].cont = 1;
       f[i].preenchido = 1;
+      f[i].tamanho = tamanho;
       //printf("%x | %x | %d | %d | %d\n", f[i].ip_org, f[i].ip_dest, f[i].protocolo, f[i].porta_o, f[i].porta_d);
   }
 
@@ -128,11 +134,34 @@ int verificafluxo(int ip, int ip2, int t, int p, int portadest)
 void printaStruct()
 {
   int i=0;
+  int j;
+  int ipprintorg, ipprintdest;
+  char *byte1;
+  char *byte2;
   system("clear");
-  printf("fluxo | IP origem | IP destino | Protocolo | Porta Orig | Porta Dest | Qtde. Pacotes | banido\n");
+  printf("fluxo | IP origem | IP destino | Protocolo | Porta Orig | Porta Dest | Qtde. Pacotes | banido | Tamanho Pct.\n");
   while(f[i].preenchido != 0)
   {
-    printf("  %d   |  %x  |  %x  |     %d     |    %d    |   %d    |      %d      |   %d     \n\n",i, f[i].ip_org, f[i].ip_dest, f[i].protocolo, f[i].porta_o, f[i].porta_d, f[i].cont, f[i].banido);
+    ipprintorg = f[i].ip_org;
+    byte1 = &ipprintorg;
+    ipprintdest = f[i].ip_dest;
+    byte2 = &ipprintdest;
+    //for(j=0;j<4;j++){
+      //printf("%d\n", byte[j]);
+    //}
+
+
+
+    if(f[i].protocolo == 1)
+    {
+
+      printf("  %d   | %d.%d.%d.%d | %d.%d.%d.%d  |     ICMP  |    x       |   x        |      %d        |   %d   |    %d    \n\n",i, byte1[3], byte1[2], byte1[1], byte1[0], byte2[3], byte2[2], byte2[1], byte2[0], f[i].cont, f[i].banido, f[i].tamanho);
+    }
+    else
+      if(f[i].protocolo == 6)
+        printf("  %d   | %d.%d.%d.%d | %d.%d.%d.%d  |     TCP   |    %d     |   %d   |      %d        |   %d  |    %d    \n\n",i, byte1[3], byte1[2], byte1[1], byte1[0], byte2[3], byte2[2], byte2[1], byte2[0], f[i].porta_o, f[i].porta_d, f[i].cont, f[i].banido, f[i].tamanho);
+      else
+        printf("  %d   | %d.%d.%d.%d | %d.%d.%d.%d  |     UDP   |    %d    |   %d    |      %d        |   %d  |    %d      \n\n",i, byte1[3], byte1[2], byte1[1], byte1[0], byte2[3], byte2[2], byte2[1], byte2[0], f[i].porta_o, f[i].porta_d, f[i].cont, f[i].banido, f[i].tamanho);
     i++;
   }
 
@@ -145,10 +174,21 @@ int testabanido(int ip, int ip2, int t, int p, int portadest)
   while(f[i].preenchido != 0){
     //printf("  %d   |  %x  |  %x  |     %d     |    %d    |   %d    |      %d      |   %d     \n\n",i, ip, ip2, t, p, portadest, 707, -1);
     //printf("  %d   |  %x  |  %x  |     %d     |    %d    |   %d    |      %d      |   %d     \n\n",i, f[i].ip_org, f[i].ip_dest, f[i].protocolo, f[i].porta_o, f[i].porta_d, f[i].cont, f[i].banido);
-    if((ip == f[i].ip_org) && (ip2 == f[i].ip_dest) && (t == f[i].protocolo) && (portadest == f[i].porta_d) && (f[i].banido == 1))
+    if(t==1)
     {
-      //printf("entrei\n");
-      return 1;
+      if((ip == f[i].ip_org) && (ip2 == f[i].ip_dest) && (t == f[i].protocolo) && (f[i].banido == 1))
+      {
+        //printf("entrei\n");
+        return 1;
+      }
+    }
+    else
+    {
+      if((ip == f[i].ip_org) && (ip2 == f[i].ip_dest) && (t == f[i].protocolo) && (portadest == f[i].porta_d) && (p == f[i].porta_o) && (f[i].banido == 1))
+      {
+        //printf("entrei\n");
+        return 1;
+      }
     }
     i++;
   }
@@ -234,7 +274,7 @@ int main(int argc,char *argv[])
 
 
 
-int t,ip, ip2;
+int t,ip, ip2, tamanho;
 unsigned char ipban[3];
 int fluxoban;
 int cont=0;
@@ -247,7 +287,7 @@ preenche();
 	// recepcao de pacotes
 while (1)
 {
-  if(cont<5)
+  if(cont<30000000)
   {
 
    		t = recv(sockd,(char *) &buff1, sizeof(buff1), 0x0);
@@ -260,27 +300,10 @@ while (1)
       ip=(buff1[26]<<24)+(buff1[27]<<16)+(buff1[28]<<8)+(buff1[29]);
       p=(buff1[34]<<8)+(buff1[35]);
       portadest=(buff1[36]<<8)+(buff1[37]);
+      //tamanho=(buff1[16]<<8)+(buff1[17]);
 
 
-      /*
-      printf("IP Origem:  %d.%d.%d.%d \n\n", buff1[26],buff1[27],buff1[28],buff1[29]);
-      printf("IP Destino:  %d.%d.%d.%d \n\n", buff1[30],buff1[31],buff1[32],buff1[33]);
-      printf("Protocolo:  %d \n", buff1[23]);
-      //p=(buff1[34]<<8)+(buff1[35]);
-      printf("Porta Origem:  %d \n", p);
-      //portadest=(buff1[36]<<8)+(buff1[37]);
-      printf("Porta Destino:  %d \n\n", portadest);
-      */
-      //printf("IP: %d.%d.%d.%d \n\n", buff1[30],buff1[31],buff1[32],buff1[33]);
-      //printf("IP: %x.%x.%x.%x \n\n", buff1[30],buff1[31],buff1[32],buff1[33]);
-      //ip=(buff1[30]<<24)+(buff1[31]<<16)+(buff1[32]<<8)+(buff1[33]);
-      //ip2=(buff1[26]<<24)+(buff1[27]<<16)+(buff1[28]<<8)+(buff1[29]);
-      //printf("%d\n", ip);
 
-      //if(((buff1[30]==ipban[0])&&(buff1[31]==ipban[1])&&(buff1[32]==ipban[2])&&(buff1[33]==ipban[3])))
-      //{
-        //banir = 1;
-      //}
       if((ip != 0xa00000a) && (ip2 != 0xa00000a))
       {
 
@@ -293,7 +316,7 @@ while (1)
         }
         else
         {
-          verificafluxo(ip, ip2, buff1[23], p, portadest);
+          verificafluxo(ip, ip2, buff1[23], p, portadest, t);
           printaStruct();
 
           printf("EVIEI\n\n");
