@@ -287,7 +287,7 @@ preenche();
 	// recepcao de pacotes
 while (1)
 {
-  if(cont<30000000)
+  if(cont<5)
   {
 
    		t = recv(sockd,(char *) &buff1, sizeof(buff1), 0x0);
@@ -367,14 +367,19 @@ if(cont>=5)
   }
   if(op == 1)
   {
+    printf("Banir ou desbanir? (1 - banir 0 - desbanir): ");
+    scanf("%d", &op);
+    if(op == 1)
+    {
     printf("Qual fluxo deseja banir: ");
     scanf("%d", &fluxoban);
-    //printf("%d\n", fluxoban);
     f[fluxoban].banido = 1;
-    //printf("%d\n", f[fluxoban].banido);
-    //for(b=0;b<4;b++){
-      //printf("%d.", ipban[b]);
-    //}
+    }
+    else{
+      printf("Qual fluxo deseja desbanir: ");
+      scanf("%d", &fluxoban);
+      f[fluxoban].banido = 0;
+    }
     cont = 0;
   }
 
